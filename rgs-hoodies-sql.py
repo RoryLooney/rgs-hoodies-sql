@@ -1,12 +1,13 @@
 import tkinter as tk
 import re as re
-
+import sqlite3
 
 class Hoodies(tk.Frame):
 
     def __init__(self, parent, ):
 
         tk.Frame.__init__(self, bg="light blue", height=30, width=30)
+        self.price = None
         self.grid(row=0, column=0)
         self.parent = parent
 
@@ -36,6 +37,25 @@ class Hoodies(tk.Frame):
         self.intialise_variables()
 
         self.date_pattern = re.compile("\d{2}/\d{2}/\d{2}")
+
+        conn = sqlite3.connect('hoodies.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS hoodie (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                forename TEXT NOT NULL,
+                surname TEXT NOT NULL,
+                mobile TEXT NOT NULL,
+                date TEXT NOT NULL,
+                tutor TEXT NOT NULL,
+                colour TEXT NOT NULL,
+                size TEXT NOT NULL,
+                quantity INTEGER NOT NULL,
+                price INTEGER NOT NULL 
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
         # widigts unrealated to creating or searching through orders
 
@@ -109,8 +129,7 @@ class Hoodies(tk.Frame):
         self.colour_picker.grid(row=2, column=1, padx=5, pady=1, sticky="W")
         self.colour_picker.config(bg="orange", fg="black")
 
-        self.size_picker = tk.OptionMenu(self.input_order_details, self.size_picked, *self.sizes,
-                                         command=self.update_cost)
+        self.size_picker = tk.OptionMenu(self.input_order_details, self.size_picked, *self.sizes, command = self.update_cost)
         self.size_picker.grid(row=3, column=1, padx=5, pady=1, sticky="W")
         self.size_picker.config(bg="orange", fg="black")
 
@@ -158,7 +177,7 @@ class Hoodies(tk.Frame):
         with open(file, "w") as f:
             f.write(self.order_details + "\n")
 
-    def File_reader(self, file):
+    def file_reader(self, file):
         # adds all the data in the file as a 2D array
 
         try:
@@ -171,9 +190,7 @@ class Hoodies(tk.Frame):
         except:
             self.total_data = ""
 
-        self.total_data
-
-    def Add_to_File(self, file):
+    def add_to_file(self, file):
 
         try:
             with open(file, "a") as f:
@@ -201,7 +218,16 @@ class Hoodies(tk.Frame):
 
     def submit_order(self):
 
-        self.File_reader("Master_file.txt")
+        self.file_reader("Master_file.txt")
+
+        conn = sqlite3.connect('hoodies.db')
+        cursor = conn.cursor()
+        self.data_to_add = self.input_forename.get().lower(), self.input_surname.get().lower(), self.clicked.get().lower(), self.input_mobile.get().lower(), self.date_input.get().lower(), self.colour_picked.get(), self.size_picked.get(), self.price, self.quantity.get()
+
+        cursor.execute("INSERT INTO hoodie (forename, surname, mobile, date, tutor, colour, size, quantity, price ) VALUES (?,?,?,?,?,?,?,?,?)",(self.data_to_add))
+
+        conn.commit()
+        conn.close()
 
         self.order_details = f"{len(self.total_data) + 1, self.input_forename.get().lower(), self.input_surname.get().lower(), self.clicked.get().lower(), self.input_mobile.get().lower(), self.date_input.get().lower(), self.colour_picked.get(), self.size_picked.get(), self.price, self.quantity.get()}"
 
@@ -226,7 +252,7 @@ class Hoodies(tk.Frame):
 
     def file_searcher(self):
 
-        self.File_reader("Master_file.txt")
+        self.file_reader("Master_file.txt")
 
         self.records_that_match = []
 
@@ -274,7 +300,7 @@ class Hoodies(tk.Frame):
             does_date_match = self.date_pattern.match(self.date_input.get())
 
             if does_date_match and len(self.date_input.get()) == 8:
-                self.Add_to_File("Master_file.txt")
+                self.add_to_file("Master_file.txt")
                 self.print_receipt()
                 return
 
@@ -286,11 +312,13 @@ class Hoodies(tk.Frame):
 
         self.total_filters.append([self.item_to_search.get().lower(), self.possible_filters[self.filter_picked.get()]])
 
-        self.current_filter_label = tk.Label(self.order_details_search,
-                                             text=f"filtering for {self.item_to_search.get()}", bg="orange")
-        self.current_filter_label.grid(column=0, row=len(self.total_filters))
+        self.anything()
 
         self.file_searcher()
+
+    def anything(self):
+        self.current_filter_label = tk.Label(self.order_details_search, text=f"filtering for {self.item_to_search.get()}", bg="orange")
+        self.current_filter_label.grid(column=0, row=len(self.total_filters))
 
 
 if __name__ == "__main__":
