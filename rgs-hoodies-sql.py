@@ -218,8 +218,7 @@ class Hoodies(tk.Frame):
         self.price = 0
         self.total_filters = []
         self.search_values = []
-
-        self.query = f"SELECT * FROM"
+        self.query = f"SELECT * FROM hoodie"
 
     def submit_order(self):
 
@@ -327,10 +326,11 @@ class Hoodies(tk.Frame):
 
     def database_searcher(self):
 
-        conn = sqlite3.connect('hoodie.db')
+        conn = sqlite3.connect('hoodies.db')
         cursor = conn.cursor()
-        cursor.execute(self.query,(self.search_values))
+        cursor.execute(self.query,self.search_values)
         results = cursor.fetchall()
+        self.info_box.delete(1.0, tk.END)
         for result in results:
             self.info_box.insert(tk.END, f"\n{result}")
 
@@ -341,8 +341,10 @@ class Hoodies(tk.Frame):
         list_of_searches.append(self.item_to_search.get())
         self.search_values = tuple(list_of_searches)
 
-        self.query += f" WHERE {self.filter_group_picker.get()} = ?"
-
+        if self.query == f"SELECT * FROM hoodie":
+            self.query += f" WHERE {self.filter_picked.get()} = ?"
+        else:
+            self.query += f" OR {self.filter_picked.get()} = ?"
         self.database_searcher()
 
 
