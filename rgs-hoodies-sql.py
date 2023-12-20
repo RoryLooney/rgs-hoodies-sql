@@ -20,7 +20,7 @@ class Hoodies(tk.Frame):
             "XL": 22,
         }
         self.possible_filters = {
-            "order id": 0,
+            "id": 0,
             "forename": 1,
             "surname": 2,
             "mobile number": 4,
@@ -139,8 +139,7 @@ class Hoodies(tk.Frame):
         self.quantity = tk.Spinbox(self.input_order_details, from_=1, to=3, command=lambda: self.update_cost())
         self.quantity.grid(row=4, column=1)
 
-        self.submit_button = tk.Button(self.input_order_details, text="Submit Order",
-                                       command=lambda: self.submit_order())
+        self.submit_button = tk.Button(self.input_order_details, text="Submit Order",command=lambda: self.submit_order())
         self.submit_button.grid(row=5, column=1, rowspan=2)
 
         self.info_box = tk.Text(self.input_order_details, height=6, width=40)
@@ -170,7 +169,7 @@ class Hoodies(tk.Frame):
         self.item_to_search = tk.Entry(self.order_details_search, bg="light green")
         self.item_to_search.grid(row=2, column=2, padx=3, pady=3)
 
-        self.filter_button = tk.Button(self.order_details_search, text="add filter", command=lambda: self.add_filter())
+        self.filter_button = tk.Button(self.order_details_search, text="add filter", command=lambda: self.db_filters())
         self.filter_button.grid(row=4, column=2, padx=3, pady=3)
 
     def print_receipt(self):
@@ -218,6 +217,9 @@ class Hoodies(tk.Frame):
         self.incomplete_data = True
         self.price = 0
         self.total_filters = []
+        self.search_values = []
+
+        self.query = f"SELECT * FROM"
 
     def submit_order(self):
 
@@ -331,6 +333,17 @@ class Hoodies(tk.Frame):
         results = cursor.fetchall()
         for result in results:
             self.info_box.insert(tk.END, f"\n{result}")
+
+
+    def db_filters(self):
+
+        list_of_searches = list(self.search_values)
+        list_of_searches.append(self.item_to_search.get())
+        self.search_values = tuple(list_of_searches)
+
+        self.query += f" WHERE {self.filter_group_picker.get()} = ?"
+
+        self.database_searcher()
 
 
 if __name__ == "__main__":
