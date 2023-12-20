@@ -38,24 +38,7 @@ class Hoodies(tk.Frame):
 
         self.date_pattern = re.compile("\d{2}/\d{2}/\d{2}")
 
-        conn = sqlite3.connect('hoodies.db')
-        cursor = conn.cursor()
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS hoodie (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                forename TEXT NOT NULL,
-                surname TEXT NOT NULL,
-                mobile TEXT NOT NULL,
-                date TEXT NOT NULL,
-                tutor TEXT NOT NULL,
-                colour TEXT NOT NULL,
-                size TEXT NOT NULL,
-                quantity INTEGER NOT NULL,
-                price INTEGER NOT NULL 
-            )
-        ''')
-        conn.commit()
-        conn.close()
+        self.create_database()
 
         # widigts unrealated to creating or searching through orders
 
@@ -78,6 +61,26 @@ class Hoodies(tk.Frame):
         self.clear_button.grid(row=1, column=2, padx=5, pady=5, sticky="w")
 
         self.tab_switcher(1)
+
+    def create_database(self):
+        conn = sqlite3.connect('hoodies.db')
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS hoodie (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                forename TEXT NOT NULL,
+                surname TEXT NOT NULL,
+                mobile TEXT NOT NULL,
+                date TEXT NOT NULL,
+                tutor TEXT NOT NULL,
+                colour TEXT NOT NULL,
+                size TEXT NOT NULL,
+                quantity INTEGER NOT NULL,
+                price INTEGER NOT NULL 
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
     def tab_switcher(self, tab):
 
@@ -231,7 +234,7 @@ class Hoodies(tk.Frame):
 
         self.order_details = f"{len(self.total_data) + 1, self.input_forename.get().lower(), self.input_surname.get().lower(), self.clicked.get().lower(), self.input_mobile.get().lower(), self.date_input.get().lower(), self.colour_picked.get(), self.size_picked.get(), self.price, self.quantity.get()}"
 
-        self.valididate_user_input()
+        self.validate_user_input()
 
         if self.incomplete_data == True:
             self.info_box.delete(1.0, tk.END)
@@ -280,7 +283,7 @@ class Hoodies(tk.Frame):
             self.order_details_search.destroy()
             self.open_order_search()
 
-    def valididate_user_input(self):
+    def validate_user_input(self):
 
         while True:
 
@@ -319,6 +322,15 @@ class Hoodies(tk.Frame):
     def anything(self):
         self.current_filter_label = tk.Label(self.order_details_search, text=f"filtering for {self.item_to_search.get()}", bg="orange")
         self.current_filter_label.grid(column=0, row=len(self.total_filters))
+
+    def database_searcher(self):
+
+        conn = sqlite3.connect('hoodie.db')
+        cursor = conn.cursor()
+        cursor.execute(self.query,(self.search_values))
+        results = cursor.fetchall()
+        for result in results:
+            self.info_box.insert(tk.END, f"\n{result}")
 
 
 if __name__ == "__main__":
